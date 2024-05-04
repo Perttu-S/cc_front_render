@@ -1,24 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Typography, TextField, Button } from '@mui/material';
 
-const fakeSentimentAnalysis = (text) => {
-  // Simulate sentiment analysis by checking if the input contains positive or negative keywords
-  const positiveKeywords = ['happy', 'good', 'awesome', 'great'];
-  const negativeKeywords = ['sad', 'bad', 'terrible', 'horrible'];
-
-  const words = text.toLowerCase().split(' ');
-  for (let word of words) {
-    if (positiveKeywords.includes(word)) {
-      return 'Positive';
-    }
-    if (negativeKeywords.includes(word)) {
-      return 'Negative';
-    }
-  }
-  // If no sentiment keywords are found, return neutral
-  return 'Neutral';
-};
-
 const App = () => {
   const [inputText, setInputText] = useState('');
   const [sentiment, setSentiment] = useState(null);
@@ -27,16 +9,33 @@ const App = () => {
     setInputText(event.target.value);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    const analysisResult = fakeSentimentAnalysis(inputText);
-    setSentiment(analysisResult);
+    
+    try {
+      const response = await fetch('http://192.168.1.14:8080/predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: inputText }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      setSentiment(data.sentiment);
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   return (
     <Container maxWidth="xs" style={{ marginTop: 50 }}>
       <Typography variant="h4" align="center" gutterBottom>
-        Fake Sentiment Analysis
+        Sentiment Analysis
       </Typography>
       <form onSubmit={handleSubmit}>
         <TextField
